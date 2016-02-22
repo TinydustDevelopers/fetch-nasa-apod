@@ -1,0 +1,17 @@
+{
+  "server": {
+    "url": "localhost:3000/apod",
+    "method": "GET"
+  },
+  "name": {
+    "cn": "获取 NASA 最新每日太空图片",
+    "en": "Get latest apod image from NASA"
+  },
+  "icon": "http://img.wdjimg.com/mms/icon/v1/7/dc/e85c7fa3db98a16fda73c4c7688dddc7_256_256.png",
+  "required": [],
+  "optional": [],
+  "returns": [{
+    "count": 1,
+    "type": "ImageURL"
+  }]
+}
