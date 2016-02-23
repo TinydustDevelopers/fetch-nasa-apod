@@ -1,2 +1,7 @@
 node_modules/
 *~
+config.js
+images
+.DS_Store
+npm-debug.log
+db.json
