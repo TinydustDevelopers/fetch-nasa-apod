@@ -37,7 +37,7 @@ try {
 
 const fetch = (time) => {
   const formattedTime = time.format('YYYY-MM-DD')
-  const url = `https://api.nasa.gov/planetary/apod?api_key=${NASA_KEY}`
+  const url = `https://api.nasa.gov/planetary/apod?api_key=${NASA_KEY}&date=${formattedTime}`
 
   console.log('fethcing ' + formattedTime)
 
