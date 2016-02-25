@@ -37,7 +37,7 @@ try {
 
 const fetch = (time) => {
   const formattedTime = time.format('YYYY-MM-DD')
-  const url = `https://api.nasa.gov/planetary/apod?api_key=${NASA_KEY}&date=${formattedTime}`
+  const url = `https://api.nasa.gov/planetary/apod?api_key=${NASA_KEY}`
 
   console.log('fethcing ' + formattedTime)
 
@@ -53,7 +53,6 @@ const fetch = (time) => {
         }
       })
       .catch(err => {
-        console.error(err);
         reject(err)
       })
   })
@@ -96,12 +95,12 @@ const cache = (time) => {
                 fs.unlinkSync(path.join(IMAGE_STORAGE_PATH, picName))
               })
               .catch(err => {
-                console.error(err)
+                console.error('cdn error: ' + err)
               })
           })
       })
       .catch(err => {
-        console.error(err)
+        console.error('fetch error: ' + err)
 
         // daysBefore++
         // cache(moment().subtract(daysBefore, 'days'))
