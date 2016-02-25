@@ -7,7 +7,7 @@ const express = require('express')
 const request = require('request-promise')
 const low = require('lowdb')
 const storage = require('lowdb/file-sync')
-const moment = require('moment')
+const moment = require('moment-timezone')
 
 const cdnify = require('./upload')
 
@@ -60,10 +60,10 @@ const fetch = (time) => {
 
 const cache = (time) => {
   if (!time) {
-    time = moment()
+    time = moment.tz('America/New_York')
   }
 
-  const picName = `${moment().format('YYYY-MM-DD')}_nasa_apod.jpg`
+  const picName = `${moment.tz('America/New_York').format('YYYY-MM-DD')}_nasa_apod.jpg`
   const pathToSave = path.join(IMAGE_STORAGE_PATH, picName)
 
   let qiniuPicName = '';
@@ -103,7 +103,7 @@ const cache = (time) => {
         console.error('fetch error: ' + err)
 
         // daysBefore++
-        // cache(moment().subtract(daysBefore, 'days'))
+        // cache(moment.tz('America/New_York').subtract(daysBefore, 'days'))
       })
   }
 }
@@ -130,7 +130,7 @@ app.listen(3000, () => {
 })
 
 setInterval(() => {
-  cache(moment())
+  cache(moment.tz('America/New_York'))
 }, moment.duration(4, 'hours').as('milliseconds'))
 
-cache(moment())
+cache(moment.tz('America/New_York'))
