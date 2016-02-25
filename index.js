@@ -13,30 +13,31 @@ const cdnify = require('./upload')
 
 const app = express()
 const db = low('db.json', { storage })
-const key = '3CZtMuShxwtbGP1bLL6S8DZZVBb7r6NkK8ltECfr'  // this is a personal key, please apply for one for yourself for free at https://api.nasa.gov
-const CDN_HOST = 'http://7xpbf9.com2.z0.glb.qiniucdn.com/' // this is a Chinese cloud storage provider, you should apply for your own too
-const PATH = path.join(__dirname, 'images')
+
+const NASA_KEY = '3CZtMuShxwtbGP1bLL6S8DZZVBb7r6NkK8ltECfr'  // this is a personal key, please apply for one for yourself for free at https://api.nasa.gov
+const CDN_HOST = 'http://7xpbf9.com2.z0.glb.qiniucdn.com/'  // this is a Chinese cloud storage provider, you should apply for your own too
+const IMAGE_STORAGE_PATH = path.join(__dirname, 'images')
 const STATUS_CODE = {
   INTERNAL_ERROR: 102
 }
 
-let daysBefore = 0
+// let daysBefore = 0  // 暂时不缓存前一天的图片
 let latestImageLocation = ''
 
-const image = db('images').takeRight()[0]
+const image = db('images').last()
 if (image) {
   latestImageLocation = image.url
 }
 
 try {
-  fs.accessSync(PATH)
+  fs.accessSync(IMAGE_STORAGE_PATH)
 } catch (e) {
-  fs.mkdirSync(PATH)
+  fs.mkdirSync(IMAGE_STORAGE_PATH)
 }
 
 const fetch = (time) => {
   const formattedTime = time.format('YYYY-MM-DD')
-  const url = `https://api.nasa.gov/planetary/apod?api_key=${key}&date=${formattedTime}`
+  const url = `https://api.nasa.gov/planetary/apod?api_key=${NASA_KEY}&date=${formattedTime}`
 
   console.log('fethcing ' + formattedTime)
 
@@ -52,6 +53,7 @@ const fetch = (time) => {
         }
       })
       .catch(err => {
+        console.error(err);
         reject(err)
       })
   })
@@ -63,15 +65,17 @@ const cache = (time) => {
   }
 
   const picName = `${moment().format('YYYY-MM-DD')}_nasa_apod.jpg`
-  const pathToSave = path.join(PATH, picName)
+  const pathToSave = path.join(IMAGE_STORAGE_PATH, picName)
 
-  let qiniuPicUrl = db('images').takeRight()[0].url.split('/');
-  let qiniuPicName = qiniuPicUrl[qiniuPicUrl.length - 1];
+  let qiniuPicName = '';
+  if (latestImageLocation) {
+    qiniuPicName = latestImageLocation[latestImageLocation.length - 1];
+  }
 
   if (picName !== qiniuPicName) {
     fetch(time)
       .then(url => {
-        daysBefore = 0
+        // daysBefore = 0
 
         request(url)
           .pipe(fs.createWriteStream(pathToSave))
@@ -83,13 +87,13 @@ const cache = (time) => {
 
                 db('images')
                   .chain()
-                  .push({ url: CDN_HOST + reply.key })
+                  .push({ url: latestImageLocation })
                   .remove(element => {
                     return latestImageLocation !== element.url
                   })
                   .value()
 
-                fs.unlinkSync(path.join(PATH, picName))
+                fs.unlinkSync(path.join(IMAGE_STORAGE_PATH, picName))
               })
               .catch(err => {
                 console.error(err)
@@ -98,8 +102,9 @@ const cache = (time) => {
       })
       .catch(err => {
         console.error(err)
-        daysBefore++
-        cache(moment().subtract(daysBefore, 'days'))
+
+        // daysBefore++
+        // cache(moment().subtract(daysBefore, 'days'))
       })
   }
 }
@@ -115,7 +120,7 @@ app.get('/apod', (req, res) => {
       type: 'Error',
       data: [{
         code: STATUS_CODE.INTERNAL_ERROR,
-        message: 'NASA error'
+        message: '没有获取到 NASA 太空图片'
       }]
     })
   }
